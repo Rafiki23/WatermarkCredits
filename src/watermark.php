@@ -23,7 +23,7 @@ class Watermark
         $this->fontPath = config('watermark.font_path', resource_path('fonts/Arial.ttf'));
         $this->fontRatio = $fontRatio;
         $this->rectangleWidthRatio = config('watermark.rectangle_width_ratio', 0.45);
-        $this->rectangleHeightRatio = config('watermark.rectangle_height_ratio', 1/6);
+        $this->rectangleHeightRatio = config('watermark.rectangle_height_ratio', 1 / 6);
     }
 
     /**
@@ -34,7 +34,7 @@ class Watermark
      * @param int $width The width of the rectangle.
      * @param int $height The height of the rectangle.
      */
-    protected function drawRectangle($x, $y, $width, $height)
+    protected function drawRectangle(int $x, int $y, int $width, int $height): void
     {
         $this->image->rectangle($x, $y, $width, $height, function ($draw) {
             $draw->background($this->rectangleColor);
@@ -48,44 +48,60 @@ class Watermark
      * @param int $x The X coordinate for the text.
      * @param int $y The Y coordinate for the text.
      */
-    protected function addText($text, $x, $y)
+    protected function addText(string $text, int $x, int $y, int $rectwidth, int $rectheight): void
     {
-        // Calculate proportional font size
-        $fontSize = $this->image->height() * $this->fontRatio;
 
-        $this->image->text($text, $x, $y, function($font) use ($fontSize) {
+        //$addmargin = 80;
+
+        // Calculate proportional font size
+        $fontSize = $rectheight / 5;
+
+        $this->image->text($text, $x, $y, function ($font) use ($fontSize) {
             $font->file($this->fontPath);
             $font->size($fontSize);
             $font->color($this->textColor);
             $font->align('left');
-            $font->valign('bottom');
+            $font->valign('top');
         });
     }
 
     /**
-     * Inserts a logo or alternative text if the logo is not available.
+     * Inserts a logo and text.
      *
      * @param string|null $logoPath The path to the logo.
-     * @param string $text The text to use if the logo is not available.
+     * @param string $text The text to use.
      * @param int $x The X coordinate for the logo or text.
      * @param int $y The Y coordinate for the logo or text.
      */
-    protected function insertLogoOrText($logoPath, $text, $x, $y)
+    protected function insertLogoAndText(?string $logoPath, string $text, int $x, int $y, int $rectwidth, int $rectheight): void
     {
-        $fontSize = $this->image->height() * $this->fontRatio;
+
+        $padding = round($rectheight * 0.2);
 
         if (!$logoPath) {
             $logoPath = config('watermark.default_logo_path');
         }
 
+        if ($logoPath && !file_exists($logoPath)) {
+            throw new \Exception("Logo file does not exist: {$logoPath}");
+        }
+
         if ($logoPath && file_exists($logoPath)) {
             $logo = Image::make($logoPath);
-            $this->image->insert($logo, 'bottom-right', 10, 10);
-        } else {
-            $logoText = config('watermark.logo_text');
-            $this->addText($logoText, $this->image->width() - 100, $this->image->height() - 30);
+
+            $logoheight = $logo->height();
+
+            if ($logo->height() / $rectheight > 0.3) {
+                $logoheight = round($rectheight * 0.3);
+                $logo->resize(round(((($rectheight * 0.3) * $logo->width())) / $logo->height()), $logoheight);
+            }
+
+            $this->image->insert($logo, 'top-left', $x + $padding, $y + $padding);
+
+            $this->addText($text, $x + $padding, $y + $logoheight + $padding + ($logoheight / 4), $rectwidth, $rectheight);
         }
     }
+
 
     /**
      * Apply a watermark to an image.
@@ -96,7 +112,7 @@ class Watermark
      * @return Watermark The current instance for method chaining.
      * @throws \Exception If the image file does not exist.
      */
-    public function applyWatermark($imagePath, $text, $logoPath = null)
+    public function applyWatermark(string $imagePath, string $text, ?string $logoPath = null): self
     {
         if (!file_exists($imagePath)) {
             throw new \Exception("Image file does not exist: {$imagePath}");
@@ -106,19 +122,18 @@ class Watermark
 
         // Calculate the position for the rectangle
         $shortSide = min($this->image->width(), $this->image->height());
-        $rectangleHeight = $shortSide / 6;
-        $y = $this->image->height() - (2*$rectangleHeight);
+        $rectangleHeight = $shortSide / 7;
+        $y = $this->image->height() - (2 * $rectangleHeight);
         $width = $this->image->width(); // Adjust width as needed
         $x = $this->image->width() - ($this->image->width() * 0.55);
+        $rectwidth = $width - $x;
+        $rectheight = $rectangleHeight;
 
         // Draw the rectangle
-        $this->drawRectangle($x, $y, $width, $y+$rectangleHeight);
-
-        // Add text to the rectangle
-        //$this->addText($text, $x + 10, $y + ($rectangleHeight / 2));
+        $this->drawRectangle($x, $y, $width, $y + $rectangleHeight);
 
         // Handle logo insertion or alternate text if logo path is not provided
-        //$this->insertLogoOrText($logoPath, $text, $x, $y);
+        $this->insertLogoAndText($logoPath, $text, round($x), round($y), $rectwidth, $rectheight);
 
         return $this;
     }
@@ -128,8 +143,13 @@ class Watermark
      *
      * @param string $outputPath Path to save the image.
      */
-    public function save($outputPath)
+    public function save(string $outputPath): bool
     {
-        $this->image->save($outputPath);
+        try {
+            $this->image->save($outputPath);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }
