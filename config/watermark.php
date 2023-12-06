@@ -10,6 +10,6 @@ return [
     'rectangle_width_ratio' => 0.45, // rectangle width as a ratio of image width
     'rectangle_height_ratio' => 1/6, // rectangle height as a ratio of the shortest side of the image
     'logo_text' => 'Your default head text', // default text to use if no logo is provided
-    'default_logo_path' => '', // Default logo path, if you have a standard logo you want to use
+    'default_logo_path' => resource_path('img/yourlogo.png'), // Default logo path, if you have a standard logo you want to use
     // You can add more configuration options related to positioning, etc.
 ];
