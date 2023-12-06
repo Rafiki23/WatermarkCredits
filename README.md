@@ -1,7 +1,16 @@
 
 # WatermarkCredits
 
-WatermarkCredits is a Laravel package for easily applying watermarks with names/logos and author information on images.
+WatermarkCredits is a Laravel package for easily applying watermarks logo and author information on images.
+
+It provides a straightforward interface for applying custom watermarks with adjustable opacity levels and the option to add supplemental text. 
+
+This is perfect for photographers, content creators, and businesses looking to protect their work and ensure proper authorship attribution on their images.
+    
+
+
+![Add your logo and author name on image](watermark_preview.jpg)
+
 
 ## Installation
 
@@ -33,12 +42,13 @@ After publishing the configuration file, it is located at `config/watermark.php`
 
 ```php
 return [
-    'opacity' => 0.6,
-    'text_color' => '#ffffff',
-    'font_size' => 24,
-    'default_logo_path' => 'path/to/your/logo.png',
-    'logo_text' => 'Default Logo Text',
-    // other configurations...
+    'opacity' => 0.6, // 60% opacity
+    'rectangle_color' => [0, 0, 0, 0.6], // black with 50% opacity
+    'text_color' => '#ffffff', // white
+    'font_size' => 24, // default font size
+    'font_path' => resource_path('fonts/Arial.ttf'), // path to the font file, assuming Arial.ttf is in the "fonts" folder under "resources"
+    'font_ratio' => 0.1, // font size as a ratio of image height
+    'default_logo_path' => resource_path('img/yourlogo.png'), // Default logo path, if you have a standard logo you want to use
 ];
 ```
 
@@ -52,13 +62,13 @@ use Rafiki23\WatermarkCredits\Watermark;
 $watermark = new Watermark();
 
 // Apply watermark to an image
-$watermark->applyWatermark('path/to/image.jpg', 'Your Watermark Text')->save('path/to/output/image.jpg');
+$watermark->applyWatermark('path/to/image.jpg', 'Author name')->save('path/to/output/image.jpg');
 ```
 
 You can also specify a custom logo:
 
 ```php
-$watermark->applyWatermark('path/to/image.jpg', 'Your Watermark Text', 'path/to/your/custom/logo.png')->save('path/to/output/image.jpg');
+$watermark->applyWatermark('path/to/image.jpg', 'Author name', 'path/to/your/custom/logo.png')->save('path/to/output/image.jpg');
 ```
 
 ## License

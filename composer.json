@@ -1,6 +1,6 @@
 {
     "name": "rafiki23/watermarkcredits",
-    "description": "WatermarkCredits is a Laravel package that enables the easy application of watermarks with names/logos and author information onto images. It provides a straightforward interface for applying custom watermarks with adjustable opacity levels and the option to add supplemental text. This is perfect for photographers, content creators, and businesses looking to protect their work and ensure proper authorship attribution on their images.",
+    "description": "WatermarkCredits is a Laravel package that enables the easy application of watermarks with logo and author information onto images.",
     "type": "library",
     "version": "0.0.1",
     "require": {
